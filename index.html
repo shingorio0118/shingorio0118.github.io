@@ -1,11 +1,54 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>test</title>
-</head>
-<body>
-<p>テストページです。</p>
-</body>
-</html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>shingo</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;padding:4vmin;background:linear-gradient(180deg,#d9f4ff 0%,#9fdcf0 55%,#6fbfd8 100%);overflow:hidden}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+#tank{display:block;width:min(100%,calc((100dvh - 8vmin - 64px)*5/3));height:auto;max-width:1200px;border-radius:18px;box-shadow:0 10px 40px rgba(30,90,120,.25)}
+.toggles{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.toggles button{font:500 14px/1 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;min-height:40px;padding:0 14px;border-radius:999px;cursor:pointer;border:1px solid rgba(29,95,130,.35);background:rgba(255,255,255,.35);color:#4a7890;transition:background .15s,color .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
+.toggles button[aria-pressed="true"]{background:rgba(255,255,255,.85);color:#1d5f82;border-color:rgba(29,95,130,.55);box-shadow:0 2px 6px rgba(30,90,120,.15)}
+.toggles button[aria-pressed="false"]{text-decoration:line-through;opacity:.75}
+.toggles button:focus-visible{outline:2px solid #1d5f82;outline-offset:2px}
+#tank.off-fish .l-fish,#tank.off-shrimp .l-shrimp,#tank.off-plants .l-plants,#tank.off-rocks .l-rocks{display:none}
+@keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){#tank *{animation:none!important}}
+</style></head><body>
+<!-- Tank copied from shingorio0118/aquarium (index.html, commit 84a9191). Keep in sync manually. -->
+<main class="stage"><svg id="tank" viewBox="0 0 400 240" role="img" aria-label="ネオンテトラとエビが泳ぐ水槽">
+<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfeefa"/><stop offset="1" stop-color="#3c9fc4"/></linearGradient>
+<linearGradient id="sd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a4a3c"/><stop offset="1" stop-color="#2e251d"/></linearGradient>
+<radialGradient id="lava" cx=".4" cy=".3"><stop offset="0" stop-color="#9a4e3c"/><stop offset="1" stop-color="#4a2420"/></radialGradient>
+<linearGradient id="fz" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9b3a6"/><stop offset="1" stop-color="#6b665c"/></linearGradient></defs>
+<rect width="400" height="240" fill="url(#wg)"/>
+<g opacity=".25" fill="#fff"><polygon points="40,0 70,0 20,240 0,240"/><polygon points="160,0 175,0 130,240 115,240"/><polygon points="290,0 310,0 270,240 250,240"/></g>
+<g class="l-plants"><g id="hygro"></g></g>
+<path d="M0 205 Q100 192 200 200 T400 198 V240 H0Z" fill="url(#sd)"/>
+<g class="l-rocks" transform="translate(-25 0)"><path d="M150 210 L165 140 Q185 115 205 128 L235 150 L250 210Z" fill="url(#fz)"/>
+<path d="M165 150 L190 180 M200 135 L215 175" stroke="#5c574e" stroke-width="2" fill="none"/>
+<ellipse cx="146" cy="205" rx="24" ry="16" fill="url(#fz)"/><ellipse cx="256" cy="206" rx="20" ry="13" fill="url(#fz)"/>
+<path d="M138 198 L150 206 M252 201 L262 208" stroke="#5c574e" stroke-width="1.5" fill="none"/></g>
+<g class="l-plants l-rocks" transform="translate(-25 0)"><g id="anubias"></g><g id="moss"></g></g><g id="fishes" class="l-fish"></g><g id="shrimps" class="l-shrimp"></g><g id="tbub"></g>
+</svg>
+<div class="toggles" role="group" aria-label="表示の切り替え">
+<button type="button" aria-pressed="true" data-l="fish">ネオンテトラ</button><button type="button" aria-pressed="true" data-l="shrimp">エビ</button><button type="button" aria-pressed="true" data-l="plants">水草</button><button type="button" aria-pressed="true" data-l="rocks">岩</button>
+</div></main>
+<script>
+(()=>{const N="http://www.w3.org/2000/svg",E=(t,a,p)=>{const e=document.createElementNS(N,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e},$=id=>document.getElementById(id);
+const hy=$("hygro");[[22,.95],[38,1],[54,.9],[70,1.05],[86,.85],[102,.75],[30,.7],[62,.8]].forEach(([x,k],i)=>{const g=E("g",{},hy);g.style.transformOrigin=x+"px 205px";g.style.animation=`sway ${3+i%3}s ease-in-out ${-i}s infinite alternate`;
+E("path",{d:`M${x} 205 Q${x+6} 130 ${x} ${205-150*k}`,stroke:"#3f8a3a","stroke-width":2.5,fill:"none"},g);
+for(let y=200;y>205-150*k;y-=11){E("ellipse",{cx:x-7,cy:y,rx:7,ry:3,fill:y<120?"#d98b8b":"#6fbf5a",transform:`rotate(-25 ${x-7} ${y})`},g);E("ellipse",{cx:x+7,cy:y-5,rx:7,ry:3,fill:y<120?"#d98b8b":"#5aae4a",transform:`rotate(25 ${x+7} ${y-5})`},g)}});
+const an=$("anubias");[[186,132],[256,195],[144,191]].forEach(([x,y])=>{[[-14,-10,-30],[0,-16,0],[13,-10,30],[-6,-4,-60],[8,-4,55]].forEach(([dx,dy,r])=>E("ellipse",{cx:x+dx,cy:y+dy,rx:9,ry:5,fill:"#2f7a3a",stroke:"#1f5a28","stroke-width":.8,transform:`rotate(${r} ${x+dx} ${y+dy})`},an))});
+const mo=$("moss");const rk=[[200,185,42,40],[146,200,22,10],[256,202,18,8]];for(let i=0;i<90;i++){const [cx,cy,rx,ry]=rk[i%3],a=Math.PI*(1+Math.random()),r=.85+Math.random()*.2,x=cx+Math.cos(a)*rx*r,y=cy+Math.sin(a)*ry*r+(i%3?0:Math.random()*20);E("circle",{cx:x,cy:Math.min(y,208),r:2.5+Math.random()*3,fill:["#4c9a3c","#5fae48","#3d8530"][i%3],opacity:.9},mo)}
+const fs=$("fishes"),fish=[];for(let i=0;i<5;i++){const g=E("g",{},fs);E("path",{d:"M-9 0 L-15 -5 L-15 5Z",fill:"#cfe6f0"},g);E("ellipse",{cx:0,cy:0,rx:10,ry:4,fill:"#e8f3f7"},g);
+E("path",{d:"M-6 -1 L9 -1.5",stroke:"#2fe0ff","stroke-width":2.4,"stroke-linecap":"round"},g);E("path",{d:"M-8 1.8 L3 2",stroke:"#ff3b4a","stroke-width":2.2,"stroke-linecap":"round"},g);E("circle",{cx:6.5,cy:-1,r:1.2,fill:"#123"},g);
+fish.push({g,x:Math.random()*400,y:50+Math.random()*90,v:(.5+Math.random()*.5)*(i%2?1:-1),ph:Math.random()*6})}
+const ss=$("shrimps"),sh=[];for(let i=0;i<2;i++){const g=E("g",{},ss);E("path",{d:"M-7 0 Q0 -6 7 -1 L9 2 Q0 3 -7 2Z",fill:"#e8573f"},g);E("path",{d:"M7 -1 L15 -7 M7 0 L16 -4",stroke:"#e8573f","stroke-width":.6},g);E("circle",{cx:6,cy:-1,r:.9,fill:"#111"},g);
+sh.push({g,x:i?175:280,x0:0,y:i<1?203:150,v:.15*(i%2?1:-1),t:Math.random()*200})}
+const tb=$("tbub"),bb=[];for(let i=0;i<10;i++)bb.push({c:E("circle",{r:1+Math.random()*2.5,fill:"none",stroke:"#fff","stroke-width":.8,opacity:.8},tb),x:345+Math.random()*12,y:Math.random()*240,v:.4+Math.random()*.6});
+let t=0;(function f(){t++;fish.forEach(o=>{o.x+=o.v;if(o.x>420)o.v=-Math.abs(o.v);if(o.x<-20)o.v=Math.abs(o.v);const y=o.y+Math.sin(t/40+o.ph)*6;o.g.setAttribute("transform",`translate(${o.x} ${y}) scale(${o.v>0?1:-1} 1)`)});
+sh.forEach(o=>{o.t++;if(o.t%240<120)o.x+=o.v;if(o.x<70||o.x>330)o.v*=-1;const l=o.y<190?(o.x>135&&o.x<215):1;if(!l&&o.y<190)o.v*=-1;o.g.setAttribute("transform",`translate(${o.x} ${o.y<190&&$("tank").classList.contains("off-rocks")?203:o.y}) scale(${o.v>0?1:-1} 1)`)});
+bb.forEach(o=>{o.y-=o.v;if(o.y<-5)o.y=240;o.c.setAttribute("cx",o.x+Math.sin(o.y/10)*2);o.c.setAttribute("cy",o.y)});requestAnimationFrame(f)})()})();
+document.querySelectorAll(".toggles button").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);document.getElementById("tank").classList.toggle("off-"+b.dataset.l,!on)}));
+</script></body></html>
