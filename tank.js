@@ -224,7 +224,7 @@ tank.addEventListener("pointercancel", e => endPtr(e, true));
 function stepNeon(o, dt, sp, canEat) {
   const f = canEat ? nearest(o, false) : null;
   let tx, ty, s = o.sp * sp;
-  if (f) { tx = f.x; ty = f.y; s *= 1.7; }
+  if (f) { tx = f.x; ty = f.y; s *= 1.1; }
   else { o.wt -= dt; if (o.wt <= 0 || Math.hypot(o.tx - o.x, o.ty - o.y) < 8) pickWander(o); tx = o.tx; ty = o.ty + Math.sin(o.t * 1.5 + o.ph) * 6; }
   const dx = tx - o.x, dy = ty - o.y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, dt * (f ? 4 : 1.5));
   o.vx += (dx / d * s - o.vx) * k; o.vy += (dy / d * s * .6 - o.vy) * k;
