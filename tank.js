@@ -22,23 +22,23 @@ const TIME_FX = {
 };
 const SANDS = [{ name: "ソイル", c: ["#5a4a3c", "#2e251d"] }, { name: "川砂", c: ["#d9c49a", "#a88c5c"] }, { name: "黒砂", c: ["#4a4a4e", "#141416"] }, { name: "白砂", c: ["#f4efe4", "#cbc3b0"] }];
 const BGS = [{ name: "澄んだ水", c: ["#bfeefa", "#3c9fc4"] }, { name: "グリーン", c: ["#d6f2d0", "#4f9a74"] }, { name: "ディープ", c: ["#a9d4f2", "#1d4f8a"] }, { name: "ブラックウォーター", c: ["#f1e2b8", "#8f6a38"] }];
-const ITEMS = ["r0", "r1", "r2", "p0", "p1"];
+const ITEMS = ["r0", "p0", "p1"];
 const KINDS = ["neon", "shrimp", "cory", "oto"];
 const LIMITS = { neon: [0, 20], shrimp: [0, 10], cory: [0, 6], oto: [0, 6] };
 const SHOW = ["fish", "shrimp", "plants", "rocks"];
-const KEY = "shingo-tank-v1";
-const DEF = () => ({ show: { fish: true, shrimp: true, plants: true, rocks: true }, n: { neon: 5, shrimp: 2, cory: 0, oto: 0 }, time: "day", sand: 0, bg: 0, pos: { r0: [0, 0], r1: [0, 0], r2: [0, 0], p0: [0, 0], p1: [0, 0] } });
+const KEY = "shingo-tank-v2";
+const DEF = () => ({ show: { fish: true, shrimp: true, plants: true, rocks: true }, n: { neon: 5, shrimp: 2, cory: 0, oto: 0 }, time: "day", sand: 0, bg: 0, pos: { r0: [0, 0], p0: [0, 0], p1: [0, 0] } });
 
-// compact format: 1.flags.neon.shrimp.cory.oto.time.sand.bg.(dx.dy)x5, trailing zeros trimmed
+// compact format: 2.flags.neon.shrimp.cory.oto.time.sand.bg.(dx.dy)x3, trailing zeros trimmed
 function encode(s) {
   const f = SHOW.reduce((m, k, i) => m | (s.show[k] ? 1 << i : 0), 0);
-  const a = [1, f, s.n.neon, s.n.shrimp, s.n.cory, s.n.oto, TIMES.indexOf(s.time), s.sand, s.bg];
+  const a = [2, f, s.n.neon, s.n.shrimp, s.n.cory, s.n.oto, TIMES.indexOf(s.time), s.sand, s.bg];
   ITEMS.forEach(k => a.push(Math.round(s.pos[k][0]), Math.round(s.pos[k][1])));
   while (a.length > 9 && a[a.length - 1] === 0) a.pop();
   return a.join(".");
 }
 function decode(str) {
-  if (typeof str !== "string" || !/^1(\.-?\d{1,4}){0,19}$/.test(str)) return null;
+  if (typeof str !== "string" || !/^2(\.-?\d{1,4}){0,14}$/.test(str)) return null;
   const a = str.split(".").map(Number), s = DEF(), g = (i, d) => (i < a.length ? a[i] : d);
   const f = g(1, 15); SHOW.forEach((k, i) => { s.show[k] = !!(f & (1 << i)); });
   KINDS.forEach((k, i) => { s.n[k] = clamp(g(2 + i, s.n[k]), LIMITS[k][0], LIMITS[k][1]); });
@@ -67,23 +67,26 @@ for (const k of ["p0", "p1"]) {
   });
   const b = it.getBBox(); Object.entries({ x: b.x, y: b.y, width: b.width, height: b.height }).forEach(([a, v]) => hit.setAttribute(a, v));
 }
-const ROCK = {
-  r0: g => { E("path", { d: "M150 210 L165 140 Q185 115 205 128 L235 150 L250 210Z", fill: "url(#fz)" }, g); E("path", { d: "M165 150 L190 180 M200 135 L215 175", stroke: "#5c574e", "stroke-width": 2, fill: "none" }, g); },
-  r1: g => { E("ellipse", { cx: 146, cy: 205, rx: 24, ry: 16, fill: "url(#fz)" }, g); E("path", { d: "M138 198 L150 206", stroke: "#5c574e", "stroke-width": 1.5, fill: "none" }, g); },
-  r2: g => { E("ellipse", { cx: 256, cy: 206, rx: 20, ry: 13, fill: "url(#fz)" }, g); E("path", { d: "M252 201 L262 208", stroke: "#5c574e", "stroke-width": 1.5, fill: "none" }, g); }
-};
-const ATT = { r0: { an: [186, 132], mo: [200, 185, 42, 40], col: "#4c9a3c", extra: true }, r1: { an: [144, 191], mo: [146, 200, 22, 10], col: "#5fae48" }, r2: { an: [256, 195], mo: [256, 202, 18, 8], col: "#3d8530" } };
-for (const k of ["r0", "r1", "r2"]) {
-  const it = E("g", { class: "item rock", "data-item": k }, $("rocks")); itemEls[k] = it;
-  const inner = E("g", { transform: "translate(-25 0)" }, it);
-  ROCK[k](E("g", {}, inner));
-  const att = E("g", { class: "att" }, inner), A = ATT[k], [ax, ay] = A.an;
+// black lava stones piled up on the left (4 + 3 + 1)
+const LAVA = [[40, 199, 12], [63, 200, 13], [87, 200, 12], [108, 201, 10], [51, 183, 11], [75, 182, 12], [97, 186, 9], [64, 167, 10]];
+function lavaStone(g, cx, cy, r) {
+  const n = 10, pts = [];
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, rr = r * (.78 + R() * .32); pts.push([cx + Math.cos(a) * rr, Math.min(cy + Math.sin(a) * rr * .78, cy + r * .55)]); }
+  E("path", { d: "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L") + "Z", fill: "url(#lava)", stroke: "#0c0b0a", "stroke-width": .7, "stroke-linejoin": "round" }, g);
+  for (let i = 0; i < 7; i++) { const a = R() * Math.PI * 2, d = R() * r * .62; E("circle", { cx: (cx + Math.cos(a) * d).toFixed(1), cy: (cy + Math.sin(a) * d * .7).toFixed(1), r: (.5 + R() * 1.1).toFixed(2), fill: "#070606", opacity: .75 }, g); }
+  for (let i = 0; i < 3; i++) { const a = Math.PI * (1.1 + R() * .8), d = R() * r * .5; E("circle", { cx: (cx + Math.cos(a) * d).toFixed(1), cy: (cy + Math.sin(a) * d * .7).toFixed(1), r: (.4 + R() * .5).toFixed(2), fill: "#6a5e57", opacity: .6 }, g); }
+}
+{
+  const it = E("g", { class: "item rock", "data-item": "r0" }, $("rocks")); itemEls.r0 = it;
+  const g = E("g", {}, it);
+  LAVA.forEach(([x, y, r]) => lavaStone(g, x, y, r));
+  // anubias on the top stone, willow moss tufts on a few stones
+  const att = E("g", { class: "att" }, it), ax = 66, ay = 158;
   [[-14, -10, -30], [0, -16, 0], [13, -10, 30], [-6, -4, -60], [8, -4, 55]].forEach(([dx, dy, r]) => E("ellipse", { cx: ax + dx, cy: ay + dy, rx: 9, ry: 5, fill: "#2f7a3a", stroke: "#1f5a28", "stroke-width": .8, transform: `rotate(${r} ${ax + dx} ${ay + dy})` }, att));
-  const [cx, cy, rx, ry] = A.mo;
-  for (let i = 0; i < 30; i++) { const a = Math.PI * (1 + R()), r = .85 + R() * .2, x = cx + Math.cos(a) * rx * r, y = cy + Math.sin(a) * ry * r + (A.extra ? R() * 20 : 0); E("circle", { cx: x.toFixed(1), cy: Math.min(y, 208).toFixed(1), r: (2.5 + R() * 3).toFixed(2), fill: A.col, opacity: .9 }, att); }
+  [[51, 175, 9, 4], [97, 179, 7, 3], [40, 190, 9, 4], [87, 191, 9, 4], [110, 194, 6, 3]].forEach(([cx, cy, rx, ry]) => { for (let i = 0; i < 9; i++) { const a = Math.PI * (1 + R()), x = cx + Math.cos(a) * rx * (.5 + R() * .6), y = cy + Math.sin(a) * ry * (.5 + R() * .6); E("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: (1.6 + R() * 2).toFixed(2), fill: i % 3 ? "#4c9a3c" : "#5fae48", opacity: .9 }, att); } });
 }
 ITEMS.forEach(k => { bbox[k] = itemEls[k].getBBox(); });
-const YR = { r0: [-30, 15], r1: [-30, 15], r2: [-30, 15], p0: [-20, 15], p1: [-20, 15] };
+const YR = { r0: [-30, 15], p0: [-20, 15], p1: [-20, 15] };
 function clampPos(k, dx, dy) { const b = bbox[k]; return [Math.round(clamp(dx, -b.x, W - b.x - b.width)), Math.round(clamp(dy, YR[k][0], YR[k][1]))]; }
 
 /* ---------- creatures ---------- */
